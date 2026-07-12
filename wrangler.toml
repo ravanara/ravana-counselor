@@ -1,0 +1,11 @@
+name = "ravana-counselor"
+main = "src/index.js"
+compatibility_date = "2024-07-12"
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ravana-db"
+database_id = "b6543bd3-507f-4899-bfc1-d6ba21751726"

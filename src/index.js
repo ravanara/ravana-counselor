@@ -1,8 +1,6 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-
-    // ====== CORS ======
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -12,7 +10,7 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // ====== ثبت‌نام ======
+    // ثبت‌نام
     if (url.pathname === '/api/register' && request.method === 'POST') {
       try {
         const { name, phone } = await request.json();
@@ -29,7 +27,7 @@ export default {
       }
     }
 
-    // ====== چت با AI ======
+    // چت با AI (نسخه‌ی ساده و تست‌شده)
     if (url.pathname === '/api/chat' && request.method === 'POST') {
       try {
         const { sessionId, message } = await request.json();
@@ -42,21 +40,16 @@ export default {
           'INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)'
         ).bind(sessionId, 'user', message, new Date().toISOString());
 
-        // دریافت تاریخچه گفتگو
-        const history = await env.DB.prepare(
-          'SELECT role, content FROM messages WHERE session_id = ? ORDER BY created_at DESC LIMIT 10'
-        ).bind(sessionId).all();
-
-        // ساخت پیام‌ها برای AI
+        // ساخت پیام برای AI
         const messages = [
           {
             role: 'system',
-            content: `تو دستیار هوش مصنوعی دکتر حسین بیدمشکی هستی. تخصص تو روانشناسی کودک، نوجوان و خانواده است. پاسخ‌هایت باید کوتاه، مفید و به‌روز باشند.`
+            content: 'تو دستیار هوش مصنوعی دکتر حسین بیدمشکی هستی. تخصص تو روانشناسی کودک، نوجوان و خانواده است. پاسخ‌هایت کوتاه، مفید و فارسی باشند.'
           },
-          ...history.results.reverse().map(m => ({
-            role: m.role === 'user' ? 'user' : 'assistant',
-            content: m.content
-          }))
+          {
+            role: 'user',
+            content: message
+          }
         ];
 
         // فراخوانی مدل AI
@@ -74,7 +67,7 @@ export default {
       }
     }
 
-    // ====== فرم تماس ======
+    // فرم تماس
     if (url.pathname === '/api/contact' && request.method === 'POST') {
       try {
         const { name, phone, subject } = await request.json();
@@ -91,12 +84,12 @@ export default {
       }
     }
 
-    // ====== پنل مدیریت ======
+    // پنل مدیریت
     if (url.pathname === '/admin') {
       return new Response(generateAdminPage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
-    // ====== API: لیست مراجعین (برای پنل) ======
+    // API: لیست مراجعین
     if (url.pathname === '/admin/api/visitors' && request.method === 'GET') {
       try {
         const visitors = await env.DB.prepare(
@@ -112,7 +105,7 @@ export default {
       }
     }
 
-    // ====== API: پیام‌های یک مراجع (برای پنل) ======
+    // API: پیام‌های یک مراجع
     if (url.pathname.startsWith('/admin/api/messages/') && request.method === 'GET') {
       const sessionId = url.pathname.split('/').pop();
       try {
@@ -125,7 +118,6 @@ export default {
       }
     }
 
-    // ====== صفحه اصلی ======
     return new Response('روان‌آرا — Worker فعال است ✅', {
       status: 200,
       headers: corsHeaders
@@ -133,7 +125,6 @@ export default {
   }
 };
 
-// ====== HTML پنل مدیریت (ساده‌شده) ======
 function generateAdminPage() {
   return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -183,7 +174,7 @@ fetch('/admin/api/visitors').then(r=>r.json()).then(d=>{
   const visitors=d.visitors||[];
   document.getElementById('totalV').textContent=faNum(visitors.length);
   let totalM=0;
-  visitors.forEach(v=>{totalM+=v.msg_count;t.innerHTML+='<tr><td>'+v.name+'</td><td>'+v.phone+'</td><td>'+new Date(v.created_at).toLocaleDateString('fa-IR')+'</td><td>'+faNum(v.msg_count)+'</td><td><button class="btn" onclick="alert(\'برای مشاهده گفتگو، با من تماس بگیرید\')">مشاهده</button></td></tr>'});
+  visitors.forEach(v=>{totalM+=v.msg_count;t.innerHTML+='<tr><td>'+v.name+'</td><td>'+v.phone+'</td><td>'+new Date(v.created_at).toLocaleDateString('fa-IR')+'</td><td>'+faNum(v.msg_count)+'</td><td><button class="btn" onclick="alert(\'برای مشاهده گفتگو، به بخش گفتگوها بروید\')">مشاهده</button></td></tr>'});
   document.getElementById('totalM').textContent=faNum(totalM);
 }).catch(()=>{document.getElementById('visitorTable').innerHTML='<tr><td colspan="5" class="empty">خطا در بارگذاری</td></tr>'});
 </script>

@@ -10,7 +10,7 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // ثبت‌نام
+    // ====== ثبت‌نام ======
     if (url.pathname === '/api/register' && request.method === 'POST') {
       try {
         const { name, phone } = await request.json();
@@ -27,7 +27,7 @@ export default {
       }
     }
 
-    // چت با AI (نسخه‌ی ساده و تست‌شده)
+    // ====== چت با پاسخ‌های از پیش نوشته شده ======
     if (url.pathname === '/api/chat' && request.method === 'POST') {
       try {
         const { sessionId, message } = await request.json();
@@ -40,23 +40,27 @@ export default {
           'INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)'
         ).bind(sessionId, 'user', message, new Date().toISOString());
 
-        // ساخت پیام برای AI
-        const messages = [
-          {
-            role: 'system',
-            content: 'تو دستیار هوش مصنوعی دکتر حسین بیدمشکی هستی. تخصص تو روانشناسی کودک، نوجوان و خانواده است. پاسخ‌هایت کوتاه، مفید و فارسی باشند.'
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ];
+        // ====== پاسخ‌های از پیش تعیین شده ======
+        let responseText = 'از اینکه با روان‌آرا در ارتباط هستید خوشحالم. برای دریافت پاسخ دقیق‌تر، لطفاً با شماره ۰۹۰۲۹۴۹۹۲۳۹ تماس بگیرید یا در ساعات کاری پیام دهید.';
 
-        // فراخوانی مدل AI
-        const aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages });
-        const responseText = aiResponse.response || 'متأسفم، در حال حاضر پاسخی دریافت نشد. لطفاً دوباره تلاش کنید.';
+        const msg = message.toLowerCase();
+        if (msg.includes('سلام') || msg.includes('درود') || msg.includes('هی')) {
+          responseText = 'سلام! وقت بخیر. به مرکز مشاوره روان‌آرا خوش آمدید. چطور می‌توانم به شما کمک کنم؟';
+        } else if (msg.includes('لجبازی') || msg.includes('حرف گوش') || msg.includes('کودک') && msg.includes('لجباز')) {
+          responseText = 'لجبازی در کودکان معمولاً نشانه‌ای از نیاز به استقلال و ابراز وجود است. بهترین راهکارها:\n• تعیین مرزهای مشخص و ثابت\n• پرهیز از برخورد مستقیم و دعوا\n• استفاده از انتخاب‌های محدود (مثلاً: "می‌خواهی این کار را الان بکنی یا بعد از ناهار؟")\n• تقویت رفتارهای مثبت با تشویق\n• در صورت ادامه، جلسات مشاوره تخصصی توصیه می‌شود.';
+        } else if (msg.includes('پرخاش') || msg.includes('ضربه') || msg.includes('کتک')) {
+          responseText = 'پرخاشگری در کودکان و نوجوانان می‌تواند ریشه در اضطراب، خشم یا مشکلات ارتباطی داشته باشد. پیشنهادها:\n• آموزش مهارت‌های کنترل خشم\n• ایجاد فضای امن برای ابراز احساسات\n• مشاوره با روانشناس کودک\n• در موارد حاد، حتماً به متخصص مراجعه کنید.';
+        } else if (msg.includes('مدرسه') || msg.includes('درس') || msg.includes('تحصیل')) {
+          responseText = 'مشکلات مدرسه می‌تواند ناشی از عوامل مختلفی باشد: اضطراب جدایی، مشکلات یادگیری، یا فشارهای اجتماعی. بهترین راه:\n• صحبت با معلم و مشاور مدرسه\n• بررسی مشکلات یادگیری با متخصص\n• تشویق به فعالیت‌های فوق‌برنامه\n• در صورت نیاز، جلسات مشاوره تخصصی.';
+        } else if (msg.includes('ارتباط') || msg.includes('فرزند') || msg.includes('رابطه')) {
+          responseText = 'ارتباط مؤثر با فرزند، پایه‌ی سلامت روان خانواده است. نکات کلیدی:\n• گوش دادن فعال بدون قضاوت\n• اختصاص زمان کیفیت برای فرزند\n• ابراز محبت کلامی و عملی\n• تعیین مرزهای منطقی و محترمانه\n• الگوی خوبی برای رفتارهای خود باشید.';
+        } else if (msg.includes('اضطراب') || msg.includes('نگرانی') || msg.includes('استرس')) {
+          responseText = 'اضطراب واکنش طبیعی بدن به استرس است، اما اگر مزمن شود نیاز به مدیریت دارد:\n• تمرین تنفس عمیق و مدیتیشن\n• ورزش منظم (پیاده‌روی، یوگا)\n• صحبت با یک متخصص روانشناسی\n• شناسایی و رفع عوامل استرس‌زا\n• در صورت نیاز، مشاوره تخصصی دریافت کنید.';
+        } else if (msg.includes('خواب') || msg.includes('بیخوابی') || msg.includes('کم خوابی')) {
+          responseText = 'کیفیت خواب بر سلامت روان تأثیر مستقیم دارد. توصیه‌ها:\n• ساعت خواب منظم داشته باشید\n• اتاق خواب را تاریک و خنک نگه دارید\n• از صفحه‌نمایش ۱ ساعت قبل از خواب استفاده نکنید\n• مصرف کافئین را در afternoon محدود کنید\n• در صورت تداوم، با مشاور صحبت کنید.';
+        }
 
-        // ذخیره پاسخ ربات
+        // ذخیره پاسخ
         await env.DB.prepare(
           'INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)'
         ).bind(sessionId, 'assistant', responseText, new Date().toISOString());
@@ -67,7 +71,7 @@ export default {
       }
     }
 
-    // فرم تماس
+    // ====== فرم تماس ======
     if (url.pathname === '/api/contact' && request.method === 'POST') {
       try {
         const { name, phone, subject } = await request.json();
@@ -84,12 +88,12 @@ export default {
       }
     }
 
-    // پنل مدیریت
+    // ====== پنل مدیریت ======
     if (url.pathname === '/admin') {
       return new Response(generateAdminPage(), { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
     }
 
-    // API: لیست مراجعین
+    // ====== API: لیست مراجعین ======
     if (url.pathname === '/admin/api/visitors' && request.method === 'GET') {
       try {
         const visitors = await env.DB.prepare(
@@ -105,7 +109,7 @@ export default {
       }
     }
 
-    // API: پیام‌های یک مراجع
+    // ====== API: پیام‌های یک مراجع ======
     if (url.pathname.startsWith('/admin/api/messages/') && request.method === 'GET') {
       const sessionId = url.pathname.split('/').pop();
       try {
@@ -174,7 +178,7 @@ fetch('/admin/api/visitors').then(r=>r.json()).then(d=>{
   const visitors=d.visitors||[];
   document.getElementById('totalV').textContent=faNum(visitors.length);
   let totalM=0;
-  visitors.forEach(v=>{totalM+=v.msg_count;t.innerHTML+='<tr><td>'+v.name+'</td><td>'+v.phone+'</td><td>'+new Date(v.created_at).toLocaleDateString('fa-IR')+'</td><td>'+faNum(v.msg_count)+'</td><td><button class="btn" onclick="alert(\'برای مشاهده گفتگو، به بخش گفتگوها بروید\')">مشاهده</button></td></tr>'});
+  visitors.forEach(v=>{totalM+=v.msg_count;t.innerHTML+='<tr><td>'+v.name+'</td><td>'+v.phone+'</td><td>'+new Date(v.created_at).toLocaleDateString('fa-IR')+'</td><td>'+faNum(v.msg_count)+'</td><td><button class="btn" onclick="alert(\'برای مشاهده گفتگو، با من تماس بگیرید\')">مشاهده</button></td></tr>'});
   document.getElementById('totalM').textContent=faNum(totalM);
 }).catch(()=>{document.getElementById('visitorTable').innerHTML='<tr><td colspan="5" class="empty">خطا در بارگذاری</td></tr>'});
 </script>
